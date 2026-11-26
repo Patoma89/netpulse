@@ -1,0 +1,15 @@
+﻿PackageIdentifier: NetPulse.NetPulse
+PackageVersion: 1.2.0
+InstallerType: inno
+Scope: user
+InstallModes:
+  - interactive
+  - silent
+  - silentWithProgress
+UpgradeBehavior: install
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/Patoma89/netpulse/releases/download/v1.2.0/NetPulse-v1.2.0-Setup.exe
+    InstallerSha256: 8E459E28C3E83FBC59D6AE4AD1767A63A539B08377820F804982002B85FC1D6D
+ManifestType: installer
+ManifestVersion: 1.6.0

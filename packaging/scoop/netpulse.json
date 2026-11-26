@@ -1,0 +1,30 @@
+﻿{
+  "version": "1.2.0",
+  "description": "Local-first network diagnostics suite (Dual-Hop, continuous MTR, LAN Radar, Wi-Fi 2.4/5/6 GHz, Process Monitor & Discord Privacy Mode).",
+  "homepage": "https://patoma89.github.io/netpulse/",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/Patoma89/netpulse/releases/download/v1.2.0/NetPulse-v1.2.0-win64-portable.zip",
+      "hash": "7cd0f3501def10844468ad5985d437a2e6c66457c7c37b5b9121e3dd752a6605"
+    }
+  },
+  "bin": "NetPulse.exe",
+  "shortcuts": [
+    [
+      "NetPulse.exe",
+      "NetPulse"
+    ]
+  ],
+  "checkver": "github",
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/netpulse-community/netpulse/releases/download/v$version/NetPulse-v$version-win64-portable.zip"
+      }
+    },
+    "hash": {
+      "url": "$baseurl/SHA256SUMS.txt"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "NetPulse",
+  "outputfilename": "NetPulse",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "Patoma89",
+    "email": "patoma06@gmail.com"
+  },
+  "info": {
+    "companyName": "NetPulse",
+    "productName": "NetPulse",
+    "productVersion": "1.2.0",
+    "copyright": "Local-First Open Community Utility",
+    "comments": "Local-First Network Radar, Wi-Fi Analyzer & Optimizer"
+  }
+}

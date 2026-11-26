@@ -1,0 +1,17 @@
+PackageIdentifier: NetPulse.NetPulse
+PackageVersion: 1.2.0
+PackageLocale: es-ES
+Publisher: Patoma89
+PackageName: NetPulse
+PackageUrl: https://github.com/Patoma89/netpulse
+License: MIT
+ShortDescription: Suite local-first de diagnóstico de red, radar LAN, analizador Wi-Fi, MTR continuo y exportador Discord para Windows.
+Tags:
+  - network
+  - diagnostics
+  - wifi
+  - radar
+  - bufferbloat
+  - mtr
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NetPulse — Suite de Diagnóstico de Red, Radar LAN & Wi-Fi para Windows</title>
+  <meta name="description" content="Suite desktop ultrarrápida para Windows 10/11 (x64). 100% local-first, 0% telemetría: Dual-Hop, MTR continuo, Auditoría CGNAT/MTU/IPv6, Radar LAN, Espectro Wi-Fi 6 GHz, Monitor de Procesos y Modo Discord." />
+  <link rel="icon" href="./favicon.ico" />
+  <style>
+    :root {
+      --bg: #090D16;
+      --surface: #111827;
+      --surface-2: #0B101B;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #F1F5F9;
+      --muted: #94A3B8;
+      --cyan: #06B6D4;
+      --emerald: #10B981;
+      --amber: #F59E0B;
+      --rose: #F43F5E;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(1200px 600px at 50% -10%, rgba(6, 182, 212, 0.14), transparent 60%), var(--bg);
+      color: var(--text);
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.55;
+      scroll-behavior: smooth;
+    }
+    a { color: inherit; text-decoration: none; }
+    .mono {
+      font-family: "JetBrains Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+      font-variant-numeric: tabular-nums;
+    }
+    .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    header.nav {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(9, 13, 22, 0.86);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 17px; }
+    .brand img { width: 32px; height: 32px; border-radius: 8px; }
+    .pill {
+      font-size: 11px; padding: 3px 9px; border-radius: 999px;
+      background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.35); color: #67E8F9;
+    }
+    .pill-green {
+      background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.35); color: #6EE7B7;
+    }
+    .nav-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      border: 1px solid var(--border); background: rgba(255, 255, 255, 0.04);
+      cursor: pointer; transition: all 0.18s ease;
+    }
+    .btn:hover { background: rgba(255, 255, 255, 0.09); transform: translateY(-1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.28), rgba(16, 185, 129, 0.24));
+      border-color: rgba(6, 182, 212, 0.55); color: #ECFEFF;
+      box-shadow: 0 8px 28px rgba(6, 182, 212, 0.16);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.38), rgba(16, 185, 129, 0.34));
+    }
+    .btn-secondary {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.4); color: #A7F3D0;
+    }
+    .hero { padding: 72px 0 48px; text-align: center; }
+    .hero-badges { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 52px); line-height: 1.1; letter-spacing: -0.02em;
+      margin: 0 auto 18px; max-width: 820px;
+      background: linear-gradient(to bottom right, #FFFFFF 45%, #94A3B8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 17px; color: var(--muted); max-width: 720px; margin: 0 auto 30px;
+    }
+    .cta-row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .meta-row {
+      margin-top: 18px; display: flex; justify-content: center; gap: 18px; flex-wrap: wrap;
+      font-size: 12px; color: var(--muted);
+    }
+    .meta-row a { color: #67E8F9; text-decoration: underline; text-underline-offset: 3px; }
+    .section { padding: 48px 0; }
+    .section-title { font-size: 24px; margin: 0 0 8px; }
+    .section-sub { color: var(--muted); margin: 0 0 28px; font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px;
+      transition: border-color 0.2s ease;
+    }
+    .card:hover { border-color: rgba(6, 182, 212, 0.35); }
+    .card h3 { margin: 0 0 8px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+    .card p { margin: 0; font-size: 13.5px; color: var(--muted); }
+    .tag {
+      font-size: 10px; padding: 2px 7px; border-radius: 6px;
+      background: rgba(6, 182, 212, 0.14); color: #67E8F9; border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+    .box {
+      background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 22px;
+    }
+    .code-line {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      background: #060910; border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px; padding: 12px 14px; font-size: 12.5px; overflow-x: auto;
+    }
+    .changelog-item {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+    }
+    .changelog-item ul { margin: 10px 0 0; padding-left: 18px; color: var(--muted); font-size: 13.5px; }
+    .changelog-item li + li { margin-top: 6px; }
+    footer {
+      border-top: 1px solid var(--border); padding: 28px 0 42px; margin-top: 40px;
+      font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a href="#top" class="brand">
+        <img src="./appicon.png" alt="NetPulse Logo" />
+        <span>NetPulse</span>
+        <span id="nav-version" class="pill mono">v1.2.0</span>
+      </a>
+      <div class="nav-actions">
+        <a href="#features" class="btn" data-i18n="nav_features">Módulos</a>
+        <a href="#security" class="btn" data-i18n="nav_security">Seguridad &amp; Win11</a>
+        <a href="#changelog" class="btn" data-i18n="nav_changelog">Patch Notes</a>
+        <button id="lang-btn" type="button" class="btn mono">ES / EN</button>
+        <a href="https://github.com/Patoma89/netpulse" target="_blank" rel="noopener" class="btn">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero container">
+      <div class="hero-badges">
+        <span class="pill pill-green mono" data-i18n="badge_privacy">0% Telemetría · 100% Local-First</span>
+        <span class="pill mono" data-i18n="badge_platform">Windows 10 / 11 x64 · CGO=0 · Sin Drivers</span>
+        <span class="pill mono" data-i18n="badge_discord">Modo Discord Integrado</span>
+      </div>
+      <h1 data-i18n="hero_title">Diagnóstico de red real en segundos. Sin nube, sin cuentas, sin humo.</h1>
+      <p data-i18n="hero_desc">
+        Descubrí al instante si el lag está en tu Wi-Fi o en tu ISP, monitoreá rutas salto por salto estilo WinMTR, detectá CGNAT/Doble NAT, escaneá tu LAN, optimizá canales Wi-Fi (2.4 / 5 / 6 GHz) y compartí tarjetas 100% censuradas en Discord.
+      </p>
+
+      <div class="cta-row">
+        <a id="dl-setup" href="https://github.com/Patoma89/netpulse/releases/download/v1.2.0/NetPulse-v1.2.0-Setup.exe" class="btn btn-primary">
+          <span data-i18n="cta_installer">Descargar Instalador Windows (.exe)</span>
+          <span id="setup-size" class="mono" style="opacity:.85">· 5.9 MB</span>
+        </a>
+        <a id="dl-zip" href="https://github.com/Patoma89/netpulse/releases/download/v1.2.0/NetPulse-v1.2.0-win64-portable.zip" class="btn btn-secondary">
+          <span data-i18n="cta_portable">Portable ZIP (.exe único)</span>
+          <span id="zip-size" class="mono" style="opacity:.85">· 5.2 MB</span>
+        </a>
+        <a href="https://github.com/Patoma89/netpulse/releases/latest" target="_blank" rel="noopener" class="btn" data-i18n="cta_releases">
+          Todos los Releases
+        </a>
+      </div>
+
+      <div class="meta-row mono">
+        <span>Release actual: <strong id="hero-version">v1.2.0</strong></span>
+        <a id="dl-sums" href="https://github.com/Patoma89/netpulse/releases/download/v1.2.0/SHA256SUMS.txt" target="_blank" rel="noopener">SHA256SUMS.txt</a>
+        <span>Shortcut Modo Discord: Ctrl+Shift+D</span>
+      </div>
+    </section>
+
+    <section id="features" class="section container">
+      <h2 class="section-title" data-i18n="feat_title">Todo en un binario nativo portátil de 13 MB</h2>
+      <p class="section-sub" data-i18n="feat_sub">APIs nativas de Windows (iphlpapi.dll, wlanapi.dll, advapi32.dll) sin Python, Node ni Npcap.</p>
+
+      <div class="grid">
+        <article class="card">
+          <h3><span class="tag mono">MTR + ISP</span> <span data-i18n="f1_t">Centro de Mando &amp; Bufferbloat</span></h3>
+          <p data-i18n="f1_d">Ping simultáneo Router vs Internet cada 500 ms, test de Bufferbloat (A+–F), MTR continuo sin Admin, Auditoría CGNAT / Doble NAT / Path MTU / IPv6 y exportación CSV/HTML de 30 días.</p>
+        </article>
+        <article class="card">
+          <h3><span class="tag mono">RADAR</span> <span data-i18n="f2_t">Radar LAN Inteligente</span></h3>
+          <p data-i18n="f2_d">ARP + mDNS + SSDP/UPnP + NetBIOS con base OUI embebida, perfiles por red (Casa/Oficina), alerta de cambio de MAC del Gateway, inspección de 9 puertos y Wake-on-LAN.</p>
+        </article>
+        <article class="card">
+          <h3><span class="tag mono">2.4 / 5 / 6 GHz</span> <span data-i18n="f3_t">Espectro Wi-Fi Matemático</span></h3>
+          <p data-i18n="f3_d">Lectura directa de wlanapi.dll independiente del idioma de Windows, curvas espectrales nítidas y cálculo en mW evitando canales DFS para cero cortes.</p>
+        </article>
+        <article class="card">
+          <h3><span class="tag mono">SIN DRIVERS</span> <span data-i18n="f4_t">Conexiones por Proceso</span></h3>
+          <p data-i18n="f4_d">Detecta qué ejecutable de Windows tiene conexiones TCP/UDP activas e I/O en tiempo real cuando sube tu ping sin instalar Npcap ni drivers de kernel.</p>
+        </article>
+        <article class="card">
+          <h3><span class="tag mono">AUTO-PILOTO</span> <span data-i18n="f5_t">DNS Turbo, UPnP &amp; Router</span></h3>
+          <p data-i18n="f5_d">Benchmark DNS paralelo con UAC puntual y rollback a DHCP, auditor UPnP, Co-Piloto de métricas Antes/Después y Auto-Piloto para OpenWrt (SSH TOFU), MikroTik y TR-064.</p>
+        </article>
+        <article class="card">
+          <h3><span class="tag mono">PRIVACIDAD</span> <span data-i18n="f6_t">Modo Discord &amp; Tarjeta PNG</span></h3>
+          <p data-i18n="f6_d">Activado por defecto: censura IPs, MACs, SSIDs y rutas de usuario antes de copiar Markdown o una tarjeta PNG lista para pegar en Discord. Incluye bandeja Windows e instancia única.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="security" class="section container">
+      <div class="box">
+        <h2 class="section-title" style="font-size:20px" data-i18n="sec_title">Transparencia, SmartScreen &amp; Verificación SHA-256</h2>
+        <p class="section-sub" style="margin-bottom:16px" data-i18n="sec_desc">
+          NetPulse se compila de forma reproducible en GitHub Actions sin compresión UPX ni telemetría. Como proyecto comunitario gratuito sin certificado comercial EV, Windows SmartScreen puede pedir confirmación la primera vez ("Más información" → "Ejecutar de todas formas").
+        </p>
+        <div class="code-line mono">
+          <span id="verify-cmd">Get-FileHash .\NetPulse-v1.2.0-Setup.exe -Algorithm SHA256</span>
+          <button id="copy-hash-cmd" type="button" class="btn" style="padding:6px 12px;font-size:11px">Copiar</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="changelog" class="section container">
+      <h2 class="section-title" data-i18n="cl_title">Patch Notes</h2>
+      <p class="section-sub" data-i18n="cl_sub">Historial completo de versiones públicas.</p>
+
+      <div style="display:grid;gap:14px">
+        <div class="changelog-item" style="border-color:rgba(6,182,212,0.4)">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+            <strong class="mono">v1.2.0 · Pro Edition</strong>
+            <span class="pill pill-green mono">ACTUAL</span>
+          </div>
+          <ul>
+            <li>Instancia única Win32, inicio opcional con Windows (<code>--minimized</code>), idioma ES/EN, tema Oscuro/Claro y atajos <code>Ctrl+Shift+D</code> / <code>F5</code>.</li>
+            <li>MTR continuo estilo WinMTR, Auditoría CGNAT / Doble NAT / Path MTU / IPv6 e Histórico persistente de 30 días exportable en CSV/HTML para reclamos ISP.</li>
+            <li>Monitor de Conexiones por Proceso (sin drivers de kernel), perfiles de red en Radar LAN, alerta de cambio de MAC del Gateway y gráficos sin deformación SVG.</li>
+            <li>Manifiestos WinGet / Scoop y buscador manual opt-in de actualizaciones.</li>
+          </ul>
+        </div>
+
+        <div class="changelog-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+            <strong class="mono">v1.1.0 · Hardening &amp; Tray</strong>
+            <span class="pill mono">ANTERIOR</span>
+          </div>
+          <ul>
+            <li>Log de microcortes/picos, Ping a Regiones Gaming, Traceroute Win32 sin Admin, OUI ampliado + inspección de puertos + Wake-on-LAN, Wi-Fi 6 GHz, SSH TOFU y Bandeja Windows.</li>
+          </ul>
+        </div>
+
+        <div class="changelog-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+            <strong class="mono">v1.0.0 · Lanzamiento Inicial</strong>
+            <span class="pill mono">BASE</span>
+          </div>
+          <ul>
+            <li>Dual-Hop 500 ms, Bufferbloat A+–F, Radar LAN multi-protocolo, Espectro Wi-Fi Win32, DNS Turbo + UPnP Audit, Piloto Router y Modo Discord.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container">
+    <span>NetPulse · MIT License · Hecho por <a href="https://github.com/Patoma89" target="_blank" rel="noopener" style="color:#67E8F9">Patoma89</a></span>
+    <span class="mono">0% Telemetry · CGO_ENABLED=0 · Windows x64</span>
+  </footer>
+
+  <script>
+    const I18N = {
+      es: {
+        nav_features: 'Módulos',
+        nav_security: 'Seguridad & Win11',
+        nav_changelog: 'Patch Notes',
+        badge_privacy: '0% Telemetría · 100% Local-First',
+        badge_platform: 'Windows 10 / 11 x64 · CGO=0 · Sin Drivers',
+        badge_discord: 'Modo Discord Integrado',
+        hero_title: 'Diagnóstico de red real en segundos. Sin nube, sin cuentas, sin humo.',
+        hero_desc: 'Descubrí al instante si el lag está en tu Wi-Fi o en tu ISP, monitoreá rutas salto por salto estilo WinMTR, detectá CGNAT/Doble NAT, escaneá tu LAN, optimizá canales Wi-Fi (2.4 / 5 / 6 GHz) y compartí tarjetas 100% censuradas en Discord.',
+        cta_installer: 'Descargar Instalador Windows (.exe)',
+        cta_portable: 'Portable ZIP (.exe único)',
+        cta_releases: 'Todos los Releases',
+        feat_title: 'Todo en un binario nativo portátil de 13 MB',
+        feat_sub: 'APIs nativas de Windows (iphlpapi.dll, wlanapi.dll, advapi32.dll) sin Python, Node ni Npcap.',
+        f1_t: 'Centro de Mando & Bufferbloat',
+        f1_d: 'Ping simultáneo Router vs Internet cada 500 ms, test de Bufferbloat (A+–F), MTR continuo sin Admin, Auditoría CGNAT / Doble NAT / Path MTU / IPv6 y exportación CSV/HTML de 30 días.',
+        f2_t: 'Radar LAN Inteligente',
+        f2_d: 'ARP + mDNS + SSDP/UPnP + NetBIOS con base OUI embebida, perfiles por red (Casa/Oficina), alerta de cambio de MAC del Gateway, inspección de 9 puertos y Wake-on-LAN.',
+        f3_t: 'Espectro Wi-Fi Matemático',
+        f3_d: 'Lectura directa de wlanapi.dll independiente del idioma de Windows, curvas espectrales nítidas y cálculo en mW evitando canales DFS para cero cortes.',
+        f4_t: 'Conexiones por Proceso',
+        f4_d: 'Detecta qué ejecutable de Windows tiene conexiones TCP/UDP activas e I/O en tiempo real cuando sube tu ping sin instalar Npcap ni drivers de kernel.',
+        f5_t: 'DNS Turbo, UPnP & Router',
+        f5_d: 'Benchmark DNS paralelo con UAC puntual y rollback a DHCP, auditor UPnP, Co-Piloto de métricas Antes/Después y Auto-Piloto para OpenWrt (SSH TOFU), MikroTik y TR-064.',
+        f6_t: 'Modo Discord & Tarjeta PNG',
+        f6_d: 'Activado por defecto: censura IPs, MACs, SSIDs y rutas de usuario antes de copiar Markdown o una tarjeta PNG lista para pegar en Discord. Incluye bandeja Windows e instancia única.',
+        sec_title: 'Transparencia, SmartScreen & Verificación SHA-256',
+        sec_desc: 'NetPulse se compila de forma reproducible en GitHub Actions sin compresión UPX ni telemetría. Como proyecto comunitario gratuito sin certificado comercial EV, Windows SmartScreen puede pedir confirmación la primera vez ("Más información" → "Ejecutar de todas formas").',
+        cl_title: 'Patch Notes',
+        cl_sub: 'Historial completo de versiones públicas.'
+      },
+      en: {
+        nav_features: 'Modules',
+        nav_security: 'Security & Win11',
+        nav_changelog: 'Patch Notes',
+        badge_privacy: '0% Telemetry · 100% Local-First',
+        badge_platform: 'Windows 10 / 11 x64 · CGO=0 · Zero Drivers',
+        badge_discord: 'Built-in Discord Privacy Mode',
+        hero_title: 'Real network diagnostics in seconds. Zero cloud, zero accounts.',
+        hero_desc: 'Pinpoint whether lag comes from your Wi-Fi or your ISP, run Admin-free continuous WinMTR probing, detect CGNAT/Double NAT, scan your LAN, optimize 2.4/5/6 GHz Wi-Fi channels, and share 100% redacted cards in Discord.',
+        cta_installer: 'Download Windows Installer (.exe)',
+        cta_portable: 'Portable ZIP (Single .exe)',
+        cta_releases: 'All Releases',
+        feat_title: 'All packed in a 13 MB portable native binary',
+        feat_sub: 'Direct Windows Win32 APIs (iphlpapi.dll, wlanapi.dll, advapi32.dll) — no Python, Node, or Npcap.',
+        f1_t: 'Command Center & Bufferbloat',
+        f1_d: '500ms Dual-Hop Router vs Internet ping, A+–F Bufferbloat test, continuous WinMTR, CGNAT/Double-NAT/Path-MTU/IPv6 audit, and 30-day CSV/HTML ISP history exports.',
+        f2_t: 'Smart LAN Radar',
+        f2_d: 'ARP + mDNS + SSDP/UPnP + NetBIOS with offline OUI vendor database, per-network profiles, Gateway MAC change guard, gentle 9-port inspection, and Wake-on-LAN.',
+        f3_t: 'Mathematical Wi-Fi Spectrum',
+        f3_d: 'Language-independent Win32 wlanapi.dll scanning, crisp spectral curves, and mW interference scoring avoiding DFS channels.',
+        f4_t: 'Per-Process Connections',
+        f4_d: 'Shows which Windows app holds live TCP/UDP sockets and I/O rates whenever your ping spikes — zero kernel drivers required.',
+        f5_t: 'DNS Turbo, UPnP & Router Pilot',
+        f5_d: 'Parallel DNS benchmark with 1-click UAC apply & DHCP rollback, UPnP audit, universal Co-Pilot, and Auto-Pilot for OpenWrt (SSH TOFU), MikroTik & TR-064.',
+        f6_t: 'Discord Mode & PNG Share Card',
+        f6_d: 'Enabled by default: masks IPs, MACs, SSIDs & user paths before copying Markdown or PNG cards to Discord. Includes system tray & single-instance lock.',
+        sec_title: 'Transparency, SmartScreen & SHA-256 Verification',
+        sec_desc: 'NetPulse is built reproducibly on GitHub Actions with zero UPX compression or telemetry. As an unsigned free community project, Windows SmartScreen may ask once ("More info" → "Run anyway").',
+        cl_title: 'Patch Notes',
+        cl_sub: 'Public release history.'
+      }
+    };
+
+    let currentLang = 'es';
+    document.getElementById('lang-btn').addEventListener('click', () => {
+      currentLang = currentLang === 'es' ? 'en' : 'es';
+      document.documentElement.lang = currentLang;
+      const dict = I18N[currentLang];
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        const k = el.getAttribute('data-i18n');
+        if (dict[k]) el.textContent = dict[k];
+      });
+    });
+
+    document.getElementById('copy-hash-cmd').addEventListener('click', async () => {
+      const cmd = document.getElementById('verify-cmd').textContent;
+      await navigator.clipboard.writeText(cmd);
+      const btn = document.getElementById('copy-hash-cmd');
+      btn.textContent = currentLang === 'en' ? 'Copied' : 'Copiado';
+      setTimeout(() => { btn.textContent = currentLang === 'en' ? 'Copy' : 'Copiar'; }, 1600);
+    });
+
+    // Progressive enhancement: keep latest release tag & asset sizes fresh from GitHub Releases API
+    fetch('https://api.github.com/repos/Patoma89/netpulse/releases/latest', {
+      headers: { Accept: 'application/vnd.github+json' }
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((rel) => {
+        if (!rel || !rel.tag_name || !Array.isArray(rel.assets)) return;
+        document.getElementById('nav-version').textContent = rel.tag_name;
+        document.getElementById('hero-version').textContent = rel.tag_name;
+        const setupAsset = rel.assets.find((a) => /Setup\.exe$/i.test(a.name));
+        const zipAsset = rel.assets.find((a) => /portable\.zip$/i.test(a.name));
+        const sumsAsset = rel.assets.find((a) => a.name === 'SHA256SUMS.txt');
+        if (setupAsset) {
+          document.getElementById('dl-setup').href = setupAsset.browser_download_url;
+          document.getElementById('setup-size').textContent = `· ${(setupAsset.size / 1048576).toFixed(1)} MB`;
+          document.getElementById('verify-cmd').textContent = `Get-FileHash .\\${setupAsset.name} -Algorithm SHA256`;
+        }
+        if (zipAsset) {
+          document.getElementById('dl-zip').href = zipAsset.browser_download_url;
+          document.getElementById('zip-size').textContent = `· ${(zipAsset.size / 1048576).toFixed(1)} MB`;
+        }
+        if (sumsAsset) {
+          document.getElementById('dl-sums').href = sumsAsset.browser_download_url;
+        }
+      })
+      .catch(() => {});
+  </script>
+</body>
+</html>

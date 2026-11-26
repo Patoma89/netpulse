@@ -1,0 +1,161 @@
+name: Release Windows x64
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CGO_ENABLED: '0'
+  APP_VERSION: '1.2.0'
+
+jobs:
+  build-windows:
+    name: Build & Package NetPulse (Windows x64)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Wails CLI v2
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@latest
+          "$env:USERPROFILE\go\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Run Go test suite (CGO_ENABLED=0)
+        run: go test -count=1 ./...
+
+      - name: Install and build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build native NetPulse.exe (no UPX)
+        run: wails build -clean -s -ldflags "-s -w"
+
+      - name: Optional Windows Authenticode signing (when certificate secret is set)
+        env:
+          SIGNING_CERT_PFX: ${{ secrets.WINDOWS_SIGNING_CERT_PFX }}
+          SIGNING_CERT_PASS: ${{ secrets.WINDOWS_SIGNING_CERT_PASS }}
+        run: |
+          if (-not [string]::IsNullOrWhiteSpace($env:SIGNING_CERT_PFX)) {
+            $pfxPath = Join-Path $env:RUNNER_TEMP "codesign.pfx"
+            [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:SIGNING_CERT_PFX))
+            $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter "signtool.exe" | Where-Object { $_.FullName -like "*x64*" } | Select-Object -First 1 -ExpandProperty FullName
+            if ($signtool) {
+              & $signtool sign /f $pfxPath /p $env:SIGNING_CERT_PASS /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 "build\bin\NetPulse.exe"
+            }
+            Remove-Item -Force -ErrorAction SilentlyContinue $pfxPath
+          } else {
+            Write-Host "No signing secret configured; skipping Authenticode step."
+          }
+
+      - name: Ensure Inno Setup is available
+        run: |
+          $iscc = @(
+            "C:\Program Files\Inno Setup 7\ISCC.exe",
+            "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) {
+            choco install innosetup --no-progress -y
+          }
+
+      - name: Package portable ZIP, Inno Setup installer, and SHA256SUMS
+        run: |
+          $tagVersion = if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME.StartsWith('v')) {
+            $env:GITHUB_REF_NAME.Substring(1)
+          } else {
+            $env:APP_VERSION
+          }
+
+          $releaseDir = Join-Path $PWD "release"
+          New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
+
+          $exePath = Join-Path $PWD "build\bin\NetPulse.exe"
+          if (-not (Test-Path $exePath)) { throw "NetPulse.exe not found" }
+
+          $readmePath = Join-Path $releaseDir "LEEME.txt"
+          @"
+          NetPulse v$tagVersion - Portable Windows x64
+          ============================================
+
+          100% Local-First · 0% Telemetria · Modo Discord integrado.
+          "@ | Set-Content -Path $readmePath -Encoding UTF8
+
+          $stageDir = Join-Path $releaseDir "_stage_portable"
+          if (Test-Path $stageDir) { Remove-Item -Recurse -Force $stageDir }
+          New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
+          Copy-Item $exePath (Join-Path $stageDir "NetPulse.exe")
+          Copy-Item $readmePath (Join-Path $stageDir "LEEME.txt")
+
+          $zipName = "NetPulse-v$tagVersion-win64-portable.zip"
+          $zipPath = Join-Path $releaseDir $zipName
+          Compress-Archive -Path (Join-Path $stageDir "*") -DestinationPath $zipPath -CompressionLevel Optimal -Force
+          Remove-Item -Recurse -Force $stageDir
+
+          $iscc = @(
+            "C:\Program Files\Inno Setup 7\ISCC.exe",
+            "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) { throw "ISCC.exe not found" }
+
+          & $iscc "/DMyAppVersion=$tagVersion" "build\windows\installer\netpulse-inno.iss"
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE" }
+
+          $setupName = "NetPulse-v$tagVersion-Setup.exe"
+          $setupPath = Join-Path $releaseDir $setupName
+          if (-not (Test-Path $setupPath)) { throw "$setupName not found" }
+
+          $artifacts = @(
+            @{ Path = $exePath; Name = "NetPulse.exe" },
+            @{ Path = $zipPath; Name = $zipName },
+            @{ Path = $setupPath; Name = $setupName }
+          )
+          $sums = foreach ($a in $artifacts) {
+            $hash = (Get-FileHash -Path $a.Path -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($a.Name)"
+          }
+          $sums | Set-Content -Path (Join-Path $releaseDir "SHA256SUMS.txt") -Encoding ASCII
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: netpulse-windows-x64
+          path: |
+            build/bin/NetPulse.exe
+            release/NetPulse-v*-win64-portable.zip
+            release/NetPulse-v*-Setup.exe
+            release/SHA256SUMS.txt
+
+      - name: Publish GitHub Release on tag push
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/bin/NetPulse.exe
+            release/NetPulse-v*-win64-portable.zip
+            release/NetPulse-v*-Setup.exe
+            release/SHA256SUMS.txt
+          generate_release_notes: true
+          overwrite_files: true
