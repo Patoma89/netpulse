@@ -42,14 +42,14 @@ jobs:
           go install github.com/wailsapp/wails/v2/cmd/wails@latest
           "$env:USERPROFILE\go\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Run Go test suite (CGO_ENABLED=0)
-        run: go test -count=1 ./...
-
       - name: Install and build frontend
         working-directory: frontend
         run: |
           npm ci
           npm run build
+
+      - name: Run Go test suite (CGO_ENABLED=0)
+        run: go test -count=1 ./...
 
       - name: Build native NetPulse.exe (no UPX)
         run: wails build -clean -s -ldflags "-s -w"

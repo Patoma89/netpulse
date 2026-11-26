@@ -6,11 +6,7 @@ Set-Location $RootDir
 $env:PATH = "C:\Program Files\Go\bin;C:\Program Files\nodejs;$env:USERPROFILE\go\bin;" + $env:PATH
 $env:CGO_ENABLED = "0"
 
-Write-Host "==> [1/6] Ejecutando suite completa de tests Go..." -ForegroundColor Cyan
-go test -count=1 ./...
-if ($LASTEXITCODE -ne 0) { throw "go test fallo con codigo $LASTEXITCODE" }
-
-Write-Host "==> [2/6] Compilando frontend React + TypeScript..." -ForegroundColor Cyan
+Write-Host "==> [1/6] Compilando frontend React + TypeScript..." -ForegroundColor Cyan
 Push-Location frontend
 try {
     npm.cmd run build
@@ -18,6 +14,10 @@ try {
 } finally {
     Pop-Location
 }
+
+Write-Host "==> [2/6] Ejecutando suite completa de tests Go..." -ForegroundColor Cyan
+go test -count=1 ./...
+if ($LASTEXITCODE -ne 0) { throw "go test fallo con codigo $LASTEXITCODE" }
 
 Write-Host "==> [3/6] Compilando binario nativo NetPulse.exe (CGO=0, sin UPX)..." -ForegroundColor Cyan
 wails build -clean -s -ldflags "-s -w"
